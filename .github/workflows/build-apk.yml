@@ -13,10 +13,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP File
+      - name: Extract ZIP and Locate Files
         run: |
-          # यह रिपॉजिटरी में मौजूद किसी भी .zip फाइल को अपने आप अनजिप कर देगा
-          unzip -o *.zip || true
+          # ZIP फ़ाइल अनज़िप करें
+          unzip -o "*.zip" || true
+
+          # यदि फ़ाइलें किसी सब-फ़ोल्डर में हैं, तो उन्हें मुख्य जगह लाएँ
+          if [ ! -f "gradlew" ]; then
+            DIR=$(find . -mindepth 2 -name "build.gradle*" -exec dirname {} \; | head -n 1)
+            if [ -n "$DIR" ]; then
+              echo "Moving files from $DIR to root..."
+              cp -r "$DIR"/* . 2>/dev/null || true
+              cp -r "$DIR"/.[!.]* . 2>/dev/null || true
+            fi
+          fi
+
+          # gradlew तैयार करें और परमिशन दें
+          if [ ! -f "gradlew" ]; then
+            gradle wrapper || true
+          fi
           chmod +x gradlew || true
 
       - name: Set up JDK 17
@@ -33,5 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
           
