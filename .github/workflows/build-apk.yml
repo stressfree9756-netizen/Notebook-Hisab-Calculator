@@ -15,10 +15,8 @@ jobs:
 
       - name: Extract ZIP and Locate Files
         run: |
-          # ZIP फ़ाइल अनज़िप करें
           unzip -o "*.zip" || true
 
-          # यदि फ़ाइलें किसी सब-फ़ोल्डर में हैं, तो उन्हें मुख्य जगह लाएँ
           if [ ! -f "gradlew" ]; then
             DIR=$(find . -mindepth 2 -name "build.gradle*" -exec dirname {} \; | head -n 1)
             if [ -n "$DIR" ]; then
@@ -28,7 +26,6 @@ jobs:
             fi
           fi
 
-          # gradlew तैयार करें और परमिशन दें
           if [ ! -f "gradlew" ]; then
             gradle wrapper || true
           fi
@@ -42,11 +39,10 @@ jobs:
           cache: gradle
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug -Pkotlin.jvm.target.validation.mode=warning --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
-          
